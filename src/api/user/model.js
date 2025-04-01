@@ -7,7 +7,11 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     mobile: { type: String, required: true, unique: true },
     dob: { type: Date, required: true },
-    role: { type: String, enum: ["consumer", "producer"], required: true },
+    role: {
+      type: String,
+      enum: ["consumer", "producer", "TicketHandler"],
+      required: true,
+    },
     password: { type: String, required: true },
     address: { type: String, required: true },
   },
