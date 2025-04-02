@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const TicketSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -50,4 +49,25 @@ const TicketSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("TicketSchema", TicketSchema);
+const pendingTicketSchema = new mongoose.Schema({
+  ticketData: {
+    type: Object,
+    required: true,
+  },
+  mobile: {
+    type: String,
+    required: true,
+  },
+  otpSentAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
+
+const PendingTicket = mongoose.model("PendingTicket", pendingTicketSchema);
+const Ticket = mongoose.model("Ticket", TicketSchema);
+
+module.exports = {
+  PendingTicket,
+  Ticket,
+};

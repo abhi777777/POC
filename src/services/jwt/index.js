@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const config = require("/Users/Abhiman.Chauhan/Desktop/Project/Backend 2/src/config");
-
 function generateToken(user) {
   const secret =
     user.role === "producer"
