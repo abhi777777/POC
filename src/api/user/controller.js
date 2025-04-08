@@ -1,6 +1,6 @@
 const { User, Login } = require("./model");
 const { generateToken } = require("../../services/jwt/index");
-
+// registration of a new user
 exports.register = async (req, res) => {
   try {
     const { name, email, mobile, dob, role, password, address } = req.body;
@@ -22,7 +22,7 @@ exports.register = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
-
+// logjn of the user either 
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
