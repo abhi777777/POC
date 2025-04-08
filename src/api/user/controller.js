@@ -3,8 +3,18 @@ const { generateToken } = require("../../services/jwt/index");
 
 exports.register = async (req, res) => {
   try {
-    const { name, email, mobile, dob, role, password } = req.body;
-    const user = new User({ name, email, mobile, dob, role, password });
+    const { name, email, mobile, dob, role, password, address } = req.body;
+
+    const user = new User({
+      name,
+      email,
+      mobile,
+      dob,
+      role,
+      password,
+      address,
+    });
+
     await user.save();
     console.log("New user registered");
     res.status(201).json({ message: "User registered successfully." });

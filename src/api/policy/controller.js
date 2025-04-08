@@ -1,11 +1,11 @@
-const Policy = require("./model");
-const Purchase = require("./model");
+const { Policy, Purchase } = require("./model");
 const { verifyToken } = require("../../services/jwt/index");
+const { generatePDFReceipt } = require("../../services/pdfkit/index");
+const { sendPolicyReceiptEmail } = require("../../services/nodemailer/index");
 
 function getUserFromToken(req) {
   return req.user;
 }
-
 exports.authenticate = (req, res, next) => {
   let token = req.headers.authorization;
   if (!token) return res.status(401).json({ error: "No token provided." });
@@ -70,15 +70,23 @@ exports.buyPolicy = async (req, res) => {
         .status(403)
         .json({ error: "Only consumers can buy policies." });
     }
+
     const { policyId } = req.body;
+
     const purchase = new Purchase({
       consumer: user.id,
       policy: policyId,
     });
+
     await purchase.save();
-    res
-      .status(201)
-      .json({ message: "Policy purchased successfully.", purchase });
+
+    // Generate PDF and attach it
+    const pdfBuffer = await generatePDFReceipt(user, purchase);
+    await sendPolicyReceiptEmail(user.email, pdfBuffer);
+    res.status(201).json({
+      message: "Policy purchased. PDF sent.",
+      purchase,
+    });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

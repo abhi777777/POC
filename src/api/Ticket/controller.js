@@ -1,7 +1,6 @@
-const Ticket = require("./model");
-const PendingTicket = require("./model");
+const { Ticket, PendingTicket } = require("./model");
 const { verifyToken } = require("../../services/jwt/index");
-const { sendOTP, verifyOTP } = require("../../services/Twilio/index");
+const { sendOTP } = require("../../services/nodemailer/index");
 
 function getUserFromToken(req) {
   return req.user;
@@ -26,33 +25,31 @@ exports.authenticate = (req, res, next) => {
   }
 };
 
-// Endpoint 1: Request Ticket (send OTP and store pending ticket)
+// Endpoint 1: Request Ticket (send OTP via email and store pending ticket)
 exports.raiseticket = async (req, res, next) => {
   try {
     const user = getUserFromToken(req);
     if (!user) {
       return res.status(401).json({ error: "User not authenticated." });
     }
-    const { mobileNumber, ...ticketData } = req.body;
-    if (!mobileNumber) {
-      return res
-        .status(400)
-        .json({ error: "mobileNumber number is required." });
+    // Now expecting an 'email' field instead of 'mobileNumber'
+    const { email, ...ticketData } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
     }
-
-    // Send OTP via Twilio
-    await sendOTP(mobileNumber);
-
-    // Save the pending ticket data in temporary storage
+    const otp = await sendOTP(email);
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
     const pendingTicket = new PendingTicket({
-      ticketData: { ...ticketData, createdBy: user.id },
-      mobileNumber,
+      ticketData: { ...ticketData, email, createdBy: user.id },
+      email,
+      otp,
+      otpExpiresAt,
     });
+
     await pendingTicket.save();
 
     res.status(200).json({
-      message:
-        "OTP sent to your mobileNumber. Please verify to raise the ticket.",
+      message: "OTP sent to your email. Please verify to raise the ticket.",
       pendingTicketId: pendingTicket._id,
     });
     next();
@@ -67,16 +64,9 @@ exports.raiseticket = async (req, res, next) => {
 // Endpoint 2: Verify OTP and Raise Ticket
 exports.verifyTicket = async (req, res, next) => {
   try {
-    // Expect pendingTicketId, mobileNumber, and otp from the request body
-    const { pendingTicketId, mobileNumber, otp } = req.body;
-    if (!pendingTicketId || !mobileNumber || !otp) {
+    const { pendingTicketId, email, otp } = req.body;
+    if (!pendingTicketId || !email || !otp) {
       return res.status(400).json({ error: "Missing required fields." });
-    }
-
-    // Verify the OTP
-    const status = await verifyOTP(mobileNumber, otp);
-    if (status !== "approved") {
-      return res.status(400).json({ error: "OTP verification failed." });
     }
 
     // Fetch the pending ticket data
@@ -85,15 +75,24 @@ exports.verifyTicket = async (req, res, next) => {
       return res.status(404).json({ error: "Pending ticket not found." });
     }
 
+    // Verify the email and OTP match
+    if (pendingTicket.email !== email || pendingTicket.otp !== otp) {
+      return res.status(400).json({ error: "OTP verification failed." });
+    }
+
+    if (pendingTicket.otpExpiresAt < new Date()) {
+      return res.status(400).json({ error: "OTP has expired." });
+    }
+
     // Create and save the permanent ticket in MongoDB
     const newTicket = new Ticket(pendingTicket.ticketData);
     await newTicket.save();
 
     // Remove the pending ticket record
-    await PendingTicket.findByIdAndRemove(pendingTicketId);
+    await PendingTicket.findByIdAndDelete(pendingTicketId);
 
     res.status(201).json({
-      message: "Ticket raised successfully and mobileNumber verified.",
+      message: "Ticket raised successfully and email verified.",
       ticket: newTicket,
     });
     next();
