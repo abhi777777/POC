@@ -1,9 +1,8 @@
-// src/api/user/index.js
+
 const express = require("express");
 const router = express.Router();
 const controller = require("./controller");
-
-// Define your routes
+// routes routing to either register or login
 router.post("/register", controller.register);
 router.post("/login", controller.login);
 module.exports = router;
