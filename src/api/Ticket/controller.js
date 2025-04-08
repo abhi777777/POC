@@ -25,29 +25,32 @@ exports.authenticate = (req, res, next) => {
   }
 };
 
-// Endpoint 1: Request Ticket (send OTP via email and store pending ticket)
+// Request Ticket (send OTP via email and store pending ticket)
 exports.raiseticket = async (req, res, next) => {
   try {
+    // getting user's info from token
     const user = getUserFromToken(req);
     if (!user) {
       return res.status(401).json({ error: "User not authenticated." });
     }
-    // Now expecting an 'email' field instead of 'mobileNumber'
+    // check if there's email in the request api
     const { email, ...ticketData } = req.body;
     if (!email) {
       return res.status(400).json({ error: "Email is required." });
     }
+    // generate otp
     const otp = await sendOTP(email);
+    // create its expiration date
     const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    // creates a temporary ticket in database untill otp verification
     const pendingTicket = new PendingTicket({
       ticketData: { ...ticketData, email, createdBy: user.id },
       email,
       otp,
       otpExpiresAt,
     });
-
+    // saves the pending ticket
     await pendingTicket.save();
-
     res.status(200).json({
       message: "OTP sent to your email. Please verify to raise the ticket.",
       pendingTicketId: pendingTicket._id,

@@ -2,13 +2,15 @@ const { Policy, Purchase } = require("./model");
 const { verifyToken } = require("../../services/jwt/index");
 const { generatePDFReceipt } = require("../../services/pdfkit/index");
 const { sendPolicyReceiptEmail } = require("../../services/nodemailer/index");
-
+// this function fetch user from token itself
 function getUserFromToken(req) {
   return req.user;
 }
 exports.authenticate = (req, res, next) => {
+  // fetch token from req
   let token = req.headers.authorization;
   if (!token) return res.status(401).json({ error: "No token provided." });
+  // the token has bearer in front of it we remove it through slicing
   token = token.slice(7).trim();
   try {
     let payload;
@@ -52,7 +54,7 @@ exports.getMyPolicies = async (req, res) => {
         .status(403)
         .json({ error: "Only producers can view their policies." });
     }
-    console.log("user to mil gya");
+    console.log("found user");
     const policies = await Policy.find({ createdBy: user.id });
     res.json({ policies });
   } catch (err) {

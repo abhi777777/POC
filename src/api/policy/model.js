@@ -56,7 +56,7 @@ const policySchema = new mongoose.Schema(
       type: [nomineeSchema],
       validate: {
         validator: function (v) {
-          if (!Array.isArray(v) || v.length === 0) return false;
+          if (v.length === 0) return false;
           const totalContribution = v.reduce(
             (sum, nominee) => sum + nominee.contribution,
             0
