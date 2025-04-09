@@ -23,7 +23,7 @@ const sendOTP = async (email) => {
 
   // Define the email options.
   const mailOptions = {
-    from: process.env.FROM_EMAIL || '"No Reply" <noreply@example.com>',
+    from: config.smtp.fromEmail ,
     to: email,
     subject: "Your OTP Code",
     text: `Your OTP code is ${otp}. It is valid for 5 minutes.`,
@@ -40,8 +40,8 @@ const sendPolicyReceiptEmail = async (toEmail, pdfBuffer) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "your_email@gmail.com",
-      pass: "your_app_password", // Use an app password, not your main password
+      user: "abhimanchauhan7@gmail.com",
+      pass: "isgf cjwr bffx vgyn", // Use an app password, not your main password
     },
   });
 
