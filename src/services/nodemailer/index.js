@@ -46,7 +46,7 @@ const sendPolicyReceiptEmail = async (toEmail, pdfBuffer) => {
   });
 
   const mailOptions = {
-    from: "your_email@gmail.com",
+    from: "abhimanchauhan7@gmail.com",
     to: toEmail,
     subject: "Your Policy Purchase Receipt",
     text: "Please find attached your policy receipt.",
