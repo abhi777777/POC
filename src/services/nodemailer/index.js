@@ -10,7 +10,7 @@ const generateOTP = () => {
 const sendOTP = async (email) => {
   const otp = generateOTP();
 
-  // Create a transporter using SMTP settings from environment variables.
+  //  transporter using SMTP settings from environment variables.
   const transporter = nodemailer.createTransport({
     host: config.smtp.host,
     port: config.smtp.port,
@@ -21,7 +21,7 @@ const sendOTP = async (email) => {
     },
   });
 
-  // Define the email options.
+  // the email options.
   const mailOptions = {
     from: config.smtp.fromEmail ,
     to: email,
@@ -41,7 +41,7 @@ const sendPolicyReceiptEmail = async (toEmail, pdfBuffer) => {
     service: "gmail",
     auth: {
       user: "abhimanchauhan7@gmail.com",
-      pass: "isgf cjwr bffx vgyn", // Use an app password, not your main password
+      //pass: "",
     },
   });
 
